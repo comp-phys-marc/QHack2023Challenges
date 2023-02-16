@@ -16,25 +16,24 @@ def hamiltonian(num_wires):
     for w in range(num_wires):
         wires.append(w)
 
-    first_sum = 0
+    coeffs = []
+    observables = []
 
     for j in wires:
         for i in wires:
             if i < j:
-                first_sum += qml.PauliX(wires=[i]) @ qml.PauliX(wires=[j])
+                coeffs.append(1 / 3)
+                observables.append(qml.prod(qml.PauliX(wires=[i]), qml.PauliX(wires=[j])))
             else:
                 break
 
-    first_sum = first_sum * (1 / 3)
-
-    second_sum = 0
-
     for k in wires:
-        second_sum += qml.PauliZ(wires=[k])
+        coeffs.append(-1)
+        observables.append(qml.PauliZ(wires=[k]))
 
     # hamiltonian = first_sum - second_sum
 
-    return qml.Hamiltonian([1/3, -1], [first_sum, second_sum])
+    return qml.Hamiltonian(coeffs, observables)
 
 def expectation_value(num_wires):
     """Simulates the circuit in question and returns the expectation value of the 
