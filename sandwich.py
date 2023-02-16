@@ -23,7 +23,7 @@ def hamiltonian(num_wires):
         for i in wires:
             if i < j:
                 coeffs.append(1 / 3)
-                observables.append(qml.prod(qml.PauliX(wires=[i]), qml.PauliX(wires=[j])))
+                observables.append(qml.PauliX(wires=[i]) @ qml.PauliX(wires=[j]))
             else:
                 break
 
