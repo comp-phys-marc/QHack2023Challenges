@@ -17,29 +17,6 @@ def error(error_key, qubit):
     getattr(qml, error_dict[error_key])(qubit)
 
 
-def cx_cascade():
-    qml.CNOT(wires=[0, 1])
-    qml.CNOT(wires=[0, 2])
-
-    qml.CNOT(wires=[3, 4])
-    qml.CNOT(wires=[3, 5])
-
-    qml.CNOT(wires=[6, 7])
-    qml.CNOT(wires=[6, 8])
-
-
-def hadamard_cascade():
-    qml.Hadamard(wires=0)
-    qml.Hadamard(wires=3)
-    qml.Hadamard(wires=6)
-
-
-def toffolis():
-    qml.Toffoli(wires=[2, 1, 0])
-    qml.Toffoli(wires=[5, 4, 3])
-    qml.Toffoli(wires=[8, 7, 6])
-
-
 @qml.qnode(dev)
 def shor(state, error_key, qubit):
     """A circuit defining Shor's code for error correction.
@@ -55,6 +32,26 @@ def shor(state, error_key, qubit):
     qml.QubitStateVector(np.array(state), wires=0)
 
     # Put your code here #
+    def cx_cascade():
+        qml.CNOT(wires=[0, 1])
+        qml.CNOT(wires=[0, 2])
+
+        qml.CNOT(wires=[3, 4])
+        qml.CNOT(wires=[3, 5])
+
+        qml.CNOT(wires=[6, 7])
+        qml.CNOT(wires=[6, 8])
+
+    def hadamard_cascade():
+        qml.Hadamard(wires=0)
+        qml.Hadamard(wires=3)
+        qml.Hadamard(wires=6)
+
+    def toffolis():
+        qml.Toffoli(wires=[2, 1, 0])
+        qml.Toffoli(wires=[5, 4, 3])
+        qml.Toffoli(wires=[8, 7, 6])
+
     qml.CNOT(wires=[0, 3])
     qml.CNOT(wires=[0, 6])
 
