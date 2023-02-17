@@ -65,21 +65,7 @@ def noisy_Pauli_density(word, lmbda):
 
 # Compute the trace distance from a noisy Pauli density to the maximally mixed density
 
-def maxmix_trace_dist(word, lmbda):
-    """
-       A function compute the trace distance between a noisy density matrix, specified
-       by a Pauli word, and the maximally mixed matrix.
-
-    Args:
-            word (str): A Pauli word represented as a string with characters I, X, Y and Z.
-            lmbda (float): The probability of replacing a qubit with something random.
-
-    Returns:
-            float: The trace distance between two matrices encoding Pauli words.
-    """
-
-    sigma = np.array([[1 / (2 ** len(word)), 0], [0, 1 / (2 ** len(word))]])
-
+def P(word, lmbda):
     lookup = {
         "I": np.array([[1, 0], [0, 1]]),
         "X": np.array([[0, 1], [1, 0]]),
@@ -97,9 +83,31 @@ def maxmix_trace_dist(word, lmbda):
             pauli_word = pauli_word @ lookup[char]
             i += 1
 
-    rho = (1 / (2 ** len(word))) * (id + pauli_word) 
+    return (1 / (2 ** len(word))) * (id + pauli_word)
 
-    return (1 / 2) * np.trace(abs_dist(rho, sigma))
+def P_noisy(word, lmbda=0):
+    return qml.matrix(noisy_Pauli_density(word, lmbda))
+
+def maxmix_trace_dist(word, lmbda):
+    """
+       A function compute the trace distance between a noisy density matrix, specified
+       by a Pauli word, and the maximally mixed matrix.
+
+    Args:
+            word (str): A Pauli word represented as a string with characters I, X, Y and Z.
+            lmbda (float): The probability of replacing a qubit with something random.
+
+    Returns:
+            float: The trace distance between two matrices encoding Pauli words.
+    """
+
+    sigma = np.array([[1 / (2 ** len(word)), 0], [0, 1 / (2 ** len(word))]])
+
+    print(f"SIGMA: {sigma}")
+
+    print(f"P: {P_noisy(word, lmbda)}")
+
+    return (1 / 2) * np.trace(abs_dist(P_noisy(word, lmbda), sigma))
 
 
 def bound_verifier(word, lmbda):
@@ -114,9 +122,14 @@ def bound_verifier(word, lmbda):
     Returns:
             float: The difference between (1 - lambda)^|P| and T(rho_P(lambda), rho_0).
     """
+    size = 0
+    for char in word:
+        if char != "I":
+            size += 1
 
-    # Put your code here #
-    return
+    print(f"SIZE: {size}")
+
+    return (1 - lmbda) ** size - maxmix_trace_dist(word, lmbda)
 
 # These functions are responsible for testing the solution.
 def run(test_case_input: str) -> str:
