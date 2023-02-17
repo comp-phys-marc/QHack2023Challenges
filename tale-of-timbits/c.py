@@ -70,7 +70,7 @@ def noisy_Pauli_density(word, lmbda):
 
     qml.QubitUnitary(np.transpose(W(1 / (2 ** len(word)))), wires=[0])
 
-    # TODO: apply depolarizing noise
+    qml.DepolarizingChannel(lmbda, wires=range(len(word) + 1))
 
 # Compute the trace distance from a noisy Pauli density to the maximally mixed density
 
