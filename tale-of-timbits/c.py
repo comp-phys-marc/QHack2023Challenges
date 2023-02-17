@@ -34,8 +34,6 @@ def noisy_Pauli_density(word, lmbda):
         "Z": np.array([[1, 0], [0, -1]])
     }
 
-    print(f"W: {W(1 / (2 ** len(word)))}")
-
     qml.QubitUnitary(W(1 / (2 ** len(word))), wires=[0])
 
     qml.PauliX(wires=[0])
@@ -45,8 +43,6 @@ def noisy_Pauli_density(word, lmbda):
     if len(word) >= 2:
         for char in word[1:]:
             id = np.kron(id, np.array([[1, 0], [0, 1]]))
-
-    print(f"ID: {id}")
 
     qml.ControlledQubitUnitary(id, control_wires=[0], wires=range(1, len(word) + 1))
         
@@ -60,11 +56,7 @@ def noisy_Pauli_density(word, lmbda):
             pauli_word = np.kron(pauli_word, lookup[char])
             i += 1
     
-    print(f"P: {pauli_word}")
-
     qml.ControlledQubitUnitary(pauli_word, control_wires=[0], wires=range(1, len(word) + 1))
-
-    print(f"W dagger: {W(1 / (2 ** len(word)))}")
 
     qml.QubitUnitary(np.transpose(W(1 / (2 ** len(word)))), wires=[0])
 
@@ -72,29 +64,6 @@ def noisy_Pauli_density(word, lmbda):
         qml.DepolarizingChannel(lmbda, wires=j)
 
 # Compute the trace distance from a noisy Pauli density to the maximally mixed density
-
-def P(word, lmbda):
-    lookup = {
-        "I": np.array([[1, 0], [0, 1]]),
-        "X": np.array([[0, 1], [1, 0]]),
-        "Y": np.array([[0, -1j], [1j, 0]]),
-        "Z": np.array([[1, 0], [0, -1]])
-    }
-
-    id = np.array([[1, 0], [0, 1]])
-    pauli_word = lookup[word[0]]
-
-    if len(word) >= 2:
-        i = 1
-        for char in word[1:]:
-            id = np.kron(id, np.array([[1, 0], [0, 1]]))
-            pauli_word = np.kron(pauli_word, lookup[char])
-            i += 1
-
-    return (1 / (2 ** len(word))) * (id + pauli_word)
-
-def P_noisy(word, lmbda=0):
-    return qml.matrix(noisy_Pauli_density)(word, lmbda)
 
 def maxmix_trace_dist(word, lmbda):
     """
@@ -111,11 +80,7 @@ def maxmix_trace_dist(word, lmbda):
 
     sigma = np.array([[1 / (2 ** len(word)), 0], [0, 1 / (2 ** len(word))]])
 
-    print(f"SIGMA: {sigma}")
-    print(f"P: {P_noisy(word, lmbda)}")
-
-    return (1 / 2) * np.trace(abs_dist(P_noisy(word, lmbda), sigma))
-
+    return (1 / 2) * np.trace(abs_dist(qml.matrix(noisy_Pauli_density)(word, lmbda), sigma))
 
 def bound_verifier(word, lmbda):
     """
@@ -133,8 +98,6 @@ def bound_verifier(word, lmbda):
     for char in word:
         if char != "I":
             size += 1
-
-    print(f"SIZE: {size}")
 
     return (1 - lmbda) ** size - maxmix_trace_dist(word, lmbda)
 
