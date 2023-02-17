@@ -12,7 +12,6 @@ def word_dist(word):
     """A function which counts the non-identity operators in a Pauli word"""
     return sum(word[i] != "I" for i in range(len(word)))
 
-
 # Produce the Pauli density for a given Pauli word and apply noise
 
 def noisy_Pauli_density(word, lmbda):
@@ -28,8 +27,6 @@ def noisy_Pauli_density(word, lmbda):
     def W(param):
         return 1 / np.sqrt(2 * param) * np.array([[np.sqrt(param), - np.sqrt(param)], [np.sqrt(param), np.sqrt(param)]])
     
-    qml.QubitUnitary(W(1 / (2 ** len(word))), wires=[0])
-
     lookup = {
         "I": qml.Identity,
         "X": qml.PauliX,
@@ -37,6 +34,8 @@ def noisy_Pauli_density(word, lmbda):
         "Z": qml.PauliZ,
         "H": qml.Hadamard
     }
+
+    qml.QubitUnitary(W(1 / (2 ** len(word))), wires=[0])
 
     qml.PauliX(wires=[0])
 
@@ -79,8 +78,29 @@ def maxmix_trace_dist(word, lmbda):
             float: The trace distance between two matrices encoding Pauli words.
     """
 
-    # Put your code here #
-    return
+    sigma = np.array([[1 / (2 ** len(word)), 0], [0, 1 / (2 ** len(word))]])
+
+    lookup = {
+        "I": np.array([[1, 0], [0, 1]]),
+        "X": np.array([[0, 1], [1, 0]]),
+        "Y": np.array([[0, -1j], [1j, 0]]),
+        "Z": np.array([[1, 0], [0, -1]])
+    }
+
+    id = np.array([[1, 0], [0, 1]])
+    pauli_word = lookup[word[0]]
+
+    if len(word) >= 2:
+        i = 1
+        for char in word[1:]:
+            id = id @ np.array([[1, 0], [0, 1]])
+            pauli_word = pauli_word @ lookup[char]
+            i += 1
+
+    rho = (1 / (2 ** len(word))) * (id + pauli_word) 
+
+    return (1 / 2) * np.trace(abs_dist(rho, sigma))
+
 
 def bound_verifier(word, lmbda):
     """
