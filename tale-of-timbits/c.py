@@ -40,7 +40,6 @@ def noisy_Pauli_density(word, lmbda):
         "H": qml.Hadamard
     }
 
-    # is this how this sum works or does this do anything at all?
     qml.PauliX(wires=[0])
 
     id = np.array([[1, 0], [0, 1]])
