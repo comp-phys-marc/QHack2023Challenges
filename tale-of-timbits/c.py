@@ -25,8 +25,6 @@ def noisy_Pauli_density(word, lmbda):
             lmbda (float): The probability of replacing a qubit with something random.
     """
 
-    dev = qml.device("default.mixed", wires=len(word) + 1)
-
     def W(param):
         return 1 / np.sqrt(2 * param) * np.array([[np.sqrt(param), - np.sqrt(param)], [np.sqrt(param), np.sqrt(param)]])
     
@@ -44,25 +42,20 @@ def noisy_Pauli_density(word, lmbda):
 
     id = np.array([[1, 0], [0, 1]])
     
-    i = 1    
-    for char in word[1:]:
-        id = id @ np.array([[1, 0], [0, 1]])
-        i += 1
+    if len(word) >= 2:
+        for char in word[1:]:
+            id = id @ np.array([[1, 0], [0, 1]])
 
     qml.ControlledQubitUnitary(id, control_wires=[0], wires=range(1, len(word) + 1))
         
     qml.PauliX(wires=[0])
 
-    if len(word) == 1:
-        pauli_word = lookup[word[0]](wires=1)
+    pauli_word = lookup[word[0]](wires=1)
 
-    elif len(word) >= 2:
-        pauli_word = lookup[word[0]](wires=1) @ lookup[word[1]](wires=2)
-
-    if len(word) > 2:
-        i = 2
-        for char in word[2:]:
-            pauli_word = pauli_word @ lookup[word[i]](wires=i+1)
+    if len(word) >= 2:
+        i = 1
+        for char in word[1:]:
+            pauli_word = pauli_word @ lookup[char](wires=i+1)
             i += 1
     
     qml.ControlledQubitUnitary(pauli_word, control_wires=[0], wires=range(1, len(word) + 1))
