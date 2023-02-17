@@ -4,26 +4,10 @@ import pennylane.numpy as np
 
 dev = qml.device("default.qubit", wires=3)
 
-def normalize_probs(probs):
-    res = []
-    totals = []
-
-    for alph in range(8):
-        total = 0
-        for val in range(8):
-            total += probs[alph][val]
-        totals.append(total)
-
-    for alph in range(8):
-        res.append([])
-        for val in range(8):
-            res[alph].append(probs[alph][val] / totals[alph])
-
-    return res
 
 @qml.qnode(dev)
 def model(alpha):
-    """In this qnode you will define your model in such a way that there is a single 
+    """In this qnode you will define your model in such a way that there is a single
     parameter alpha which returns each of the basic states.
 
     Args:
@@ -32,42 +16,22 @@ def model(alpha):
     Returns:
         (numpy.tensor): The probability vector of the resulting quantum state.
     """
-    def ReLu(angle, cutoff=0):
-        if angle < cutoff:
-            return cutoff
-        else:
-            return angle
-    
-    def envelope(x):
-        return min((1 / (1 + np.exp(-x)) - 0.5) * 4.4, 1)
-    
-    # def bit_0_envelope(x):
-    #     return 1 / (1 + np.exp(-x + 2))
-
-    if isinstance(alpha, np.tensor):
-        alpha = ReLu(alpha, round(alpha.item()))
+    # Put your code here #
+    if type(alpha) == int:
+        bin_encoding = bin(alpha)[2:].zfill(3)
     else:
-        alpha = ReLu(alpha, round(alpha))
+        bin_encoding = [0.0, 0.0, 0.0]
 
-    qml.RX(envelope(ReLu(alpha) % 2) * np.pi, wires=[2])
+    bit1 = int(bin_encoding[0])
+    bit2 = int(bin_encoding[1])
+    bit3 = int(bin_encoding[2])
 
-    # odd numbers
-    if alpha in [5, 7]:
-        
-        qml.RX(envelope(ReLu(alpha - 1) % 4) * np.pi, wires=[1])
-        qml.RX(envelope(ReLu(alpha - 2) % 4) * np.pi, wires=[0]) # qml.RX(bit_0_envelope(alpha) * np.pi, wires=[0])
-    
-    # center point
-    elif alpha == 3:
-        qml.RX(envelope(ReLu(alpha - 1) % 3) * np.pi, wires=[1])
-        qml.RX(0, wires=[0]) # qml.RX(bit_0_envelope(alpha) * np.pi, wires=[0])
-    
-    #even numbers
-    else:
-        qml.RX(envelope(ReLu(alpha - 1) % 3) * np.pi, wires=[1])
-        qml.RX(envelope(ReLu(alpha - 2) % 3) * np.pi, wires=[0]) # qml.RX(bit_0_envelope(alpha) * np.pi, wires=[0])
-        
+    qml.RX(np.pi * bit1, wires=0)
+    qml.RX(np.pi * bit2, wires=1)
+    qml.RX(np.pi * bit3, wires=2)
+
     return qml.probs(wires=range(3))
+
 
 def generate_coefficients():
     """This function must return a list of 8 different values of the parameter that
@@ -76,6 +40,7 @@ def generate_coefficients():
     Returns:
         (list(int)): A list of eight real numbers.
     """
+    # Put your code here #
     return [0, 1, 2, 3, 4, 5, 6, 7]
 
 
@@ -83,18 +48,13 @@ def generate_coefficients():
 def run(test_case_input: str) -> str:
     return None
 
+
 def check(solution_output, expected_output: str) -> None:
     coefs = generate_coefficients()
     output = np.array([model(c) for c in coefs])
     epsilon = 0.001
 
     for i in range(len(coefs)):
-        print("OUTPUT:")
-        print(output)
-        print("COEFF:")
-        print(coefs[i])
-        print("PROBABILITY CORRECT:")
-        print(output[i][i])
         assert np.isclose(output[i][i], 1)
 
     def is_continuous(function, point):
@@ -103,9 +63,6 @@ def check(solution_output, expected_output: str) -> None:
         if limit is not None and sum(abs(limit - function(point))) < epsilon:
             return True
         else:
-            print(f"NOT CONTINUOUS @ {point} : {sum(abs(limit - function(point)))} < {epsilon}")
-            print(limit)
-            print(function(point))
             return False
 
     def is_continuous_in_interval(function, interval):
@@ -121,12 +78,13 @@ def check(solution_output, expected_output: str) -> None:
 
         return average
 
-    assert is_continuous_in_interval(model, np.arange(0,10,0.001))
+    assert is_continuous_in_interval(model, np.arange(0, 10, 0.001))
 
     for coef in coefs:
         assert coef >= 0 and coef <= 10
 
-test_cases = [['No input', 'No output']]
+
+test_cases = [["No input", "No output"]]
 
 for i, (input_, expected_output) in enumerate(test_cases):
     print(f"Running test case {i} with input '{input_}'...")
