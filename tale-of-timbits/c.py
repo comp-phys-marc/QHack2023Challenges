@@ -60,6 +60,7 @@ def noisy_Pauli_density(word, lmbda):
 
     qml.QubitUnitary(np.transpose(W(1 / (2 ** len(word)))), wires=[0])
 
+    # can't get a matrix with depolarizing errors
     for j in range(len(word) + 1):
         qml.DepolarizingChannel(lmbda, wires=j)
 
@@ -78,9 +79,17 @@ def maxmix_trace_dist(word, lmbda):
             float: The trace distance between two matrices encoding Pauli words.
     """
 
-    sigma = np.array([[1 / (2 ** len(word)), 0], [0, 1 / (2 ** len(word))]])
+    id = np.kron(np.array([[1, 0], [0, 1]]), np.array([[1, 0], [0, 1]]))   # extra id for contorl wire
+    
+    if len(word) >= 2:
+        for char in word[1:]:
+            id = np.kron(id, np.array([[1, 0], [0, 1]]))
 
-    return (1 / 2) * np.trace(abs_dist(qml.matrix(noisy_Pauli_density)(word, lmbda), sigma))
+    sigma = id * (1 / (2 ** len(word)))
+
+    rho = qml.matrix(noisy_Pauli_density)(word, lmbda)  # need a matrix with depolzarizing errors
+
+    return (1 / 2) * np.trace(abs_dist(rho, sigma))
 
 def bound_verifier(word, lmbda):
     """
