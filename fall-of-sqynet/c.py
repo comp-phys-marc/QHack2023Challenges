@@ -20,7 +20,7 @@ def half_life(gamma, p):
 
     dev = qml.device("default.mixed", wires=num_wires)
 
-    DEL_T = 1
+    DEL_T = 0.1
 
     @qml.qnode(dev)
     def noise(
