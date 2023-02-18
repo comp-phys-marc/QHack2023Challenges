@@ -20,7 +20,7 @@ def half_life(gamma, p):
 
     dev = qml.device("default.mixed", wires=num_wires)
 
-    DEL_T = 0.001
+    DEL_T = 1
 
     @qml.qnode(dev)
     def noise(
@@ -38,16 +38,21 @@ def half_life(gamma, p):
         Returns:
             (float): The relaxation half-life.
         """
+
+        qml.Hadamard(wires=0)
+
         time = 0
         while time < total_time:
             time += DEL_T
-            qml.GeneralizedAmplitudeDamping(gamma * DEL_T, p)
+            qml.GeneralizedAmplitudeDamping(gamma * DEL_T, p, wires=0)
 
         return qml.probs(wires=0)
 
-    t = 10 * DEL_T
+    t = 0
 
-    while res[1] != 1 / 4:
+    res = [0.5, 0.5]
+
+    while res[0] < 0.75:
         t += DEL_T
         res = noise(gamma, t)
 
