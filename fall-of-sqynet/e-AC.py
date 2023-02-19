@@ -12,21 +12,18 @@ def create_Hamiltonian(h):
     Returns:
         (qml.Hamiltonian): Hamiltonian of the statement associated to h
     """
-
-    wires = [1, 2, 3, 4]
-
     coeffs = []
     observables = []
 
-    for i in wires:
-        if i != 4:
+    for i in range(4):
+        if i != 3:
             j = i + 1
         else:
             j = 0
         coeffs.append(-1)
         observables.append(qml.PauliZ(wires=[i]) @ qml.PauliZ(wires=[j]))
 
-    for k in wires:
+    for k in range(4):
         coeffs.append(-h)
         observables.append(qml.PauliX(wires=[k]))
 
@@ -49,6 +46,11 @@ def model(params, H):
     Returns:
         (float): Expected value with respect to the Hamiltonian H
     """
+    for w in range(4):
+        qml.RX(params[w * 2], wires=w)
+        qml.RZ(params[w * 2 + 1], wires=w)
+
+    return qml.expval(H)
 
 
 def train(h):
@@ -62,6 +64,27 @@ def train(h):
     Returns:
         (numpy.array): parameters that best approximate the ground state.
     """
+
+
+    def cost(params):
+        """Define a cost function that only depends on params, given alpha and beta fixed"""
+
+        return model(params, create_Hamiltonian(h))
+
+    #Initialize parameters, choose an optimization method and number of steps
+    init_params = np.array([0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2], requires_grad=True)
+    opt = qml.AdamOptimizer(stepsize=0.1)
+    steps = 100
+
+    # set the initial parameter values
+    params = init_params
+
+    for i in range(steps):
+        # update the circuit parameters
+
+        params = opt.step(cost, params)
+
+    return params
 
 
 # These functions are responsible for testing the solution.
