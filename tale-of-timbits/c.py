@@ -3,16 +3,20 @@ import pennylane as qml
 import pennylane.numpy as np
 import scipy
 
+
 def abs_dist(rho, sigma):
     """A function to compute the absolute value |rho - sigma|."""
     polar = scipy.linalg.polar(rho - sigma)
     return polar[1]
 
+
 def word_dist(word):
     """A function which counts the non-identity operators in a Pauli word"""
     return sum(word[i] != "I" for i in range(len(word)))
 
+
 # Produce the Pauli density for a given Pauli word and apply noise
+
 
 def noisy_Pauli_density(word, lmbda):
     """
@@ -20,51 +24,29 @@ def noisy_Pauli_density(word, lmbda):
        word P, and applies depolarizing noise to each qubit. Nothing is returned.
 
     Args:
-            word (str): A Pauli word represented as a string with characters I,  X, Y and Z.
+            word (str): A Pauli word represented as a string with characters I, X, Y and Z.
             lmbda (float): The probability of replacing a qubit with something random.
     """
 
-    def W(param):
-        return 1 / np.sqrt(2 * param) * np.array([[np.sqrt(param), - np.sqrt(param)], [np.sqrt(param), np.sqrt(param)]])
-    
-    lookup = {
-        "I": np.array([[1, 0], [0, 1]]),
-        "X": np.array([[0, 1], [1, 0]]),
-        "Y": np.array([[0, -1j], [1j, 0]]),
-        "Z": np.array([[1, 0], [0, -1]])
-    }
+    # Put your code here #
+    # Put your code here #
 
-    qml.QubitUnitary(W(1 / (2 ** len(word))), wires=[0])
+    for i, gate in enumerate(word):
+        if gate == "X":
+            qml.PauliX(wires=i)
+        elif gate == "Y":
+            qml.PauliY(wires=i)
+        elif gate == "Z":
+            qml.PauliZ(wires=i)
+        else:
+            qml.Identity(wires=i)
 
-    qml.PauliX(wires=[0])
+    for i in range(len(word)):
+        qml.DepolarizingChannel(p=lmbda, wires=i)
 
-    id = np.array([[1, 0], [0, 1]])
-    
-    if len(word) >= 2:
-        for char in word[1:]:
-            id = np.kron(id, np.array([[1, 0], [0, 1]]))
-
-    qml.ControlledQubitUnitary(id, control_wires=[0], wires=range(1, len(word) + 1))
-        
-    qml.PauliX(wires=[0])
-
-    pauli_word = lookup[word[0]]
-
-    if len(word) >= 2:
-        i = 1
-        for char in word[1:]:
-            pauli_word = np.kron(pauli_word, lookup[char])
-            i += 1
-    
-    qml.ControlledQubitUnitary(pauli_word, control_wires=[0], wires=range(1, len(word) + 1))
-
-    qml.QubitUnitary(np.transpose(W(1 / (2 ** len(word)))), wires=[0])
-
-    # can't get a matrix with depolarizing errors
-    for j in range(len(word) + 1):
-        qml.DepolarizingChannel(lmbda, wires=j)
 
 # Compute the trace distance from a noisy Pauli density to the maximally mixed density
+
 
 def maxmix_trace_dist(word, lmbda):
     """
@@ -79,17 +61,13 @@ def maxmix_trace_dist(word, lmbda):
             float: The trace distance between two matrices encoding Pauli words.
     """
 
-    id = np.kron(np.array([[1, 0], [0, 1]]), np.array([[1, 0], [0, 1]]))   # extra id for contorl wire
-    
-    if len(word) >= 2:
-        for char in word[1:]:
-            id = np.kron(id, np.array([[1, 0], [0, 1]]))
+    # Put your code here #
+    N = len(word)
+    word_matrix = noisy_Pauli_density(word, lmbda)
+    identity_matrix = (1 / 2**N) * np.eye(2**N)
 
-    sigma = id * (1 / (2 ** len(word)))
+    return 0.5 * np.trace(abs_dist(word_matrix, identity_matrix))
 
-    rho = qml.matrix(noisy_Pauli_density)(word, lmbda)  # need a matrix with depolzarizing errors
-
-    return (1 / 2) * np.trace(abs_dist(rho, sigma))
 
 def bound_verifier(word, lmbda):
     """
@@ -103,16 +81,18 @@ def bound_verifier(word, lmbda):
     Returns:
             float: The difference between (1 - lambda)^|P| and T(rho_P(lambda), rho_0).
     """
-    size = 0
-    for char in word:
-        if char != "I":
-            size += 1
 
-    return (1 - lmbda) ** size - maxmix_trace_dist(word, lmbda)
+    # Put your code here #
+    P = word_dist(word)
+
+    lmbda_term = (1 - lmbda) ** P
+    trace_term = maxmix_trace_dist(word, lmbda)
+
+    return lmbda_term - trace_term
+
 
 # These functions are responsible for testing the solution.
 def run(test_case_input: str) -> str:
-
     word, lmbda = json.loads(test_case_input)
     output = np.real(bound_verifier(word, lmbda))
 
@@ -120,27 +100,32 @@ def run(test_case_input: str) -> str:
 
 
 def check(solution_output: str, expected_output: str) -> None:
-
     solution_output = json.loads(solution_output)
     expected_output = json.loads(expected_output)
     assert np.allclose(
         solution_output, expected_output, rtol=1e-4
     ), "Your trace distance isn't quite right!"
 
-test_cases = [['["XXI", 0.7]', '0.0877777777777777'], ['["XXIZ", 0.1]', '0.4035185185185055'], ['["YIZ", 0.3]', '0.30999999999999284'], ['["ZZZZZZZXXX", 0.1]', '0.22914458207245006']]
+
+test_cases = [
+    ['["XXI", 0.7]', "0.0877777777777777"],
+    ['["XXIZ", 0.1]', "0.4035185185185055"],
+    ['["YIZ", 0.3]', "0.30999999999999284"],
+    ['["ZZZZZZZXXX", 0.1]', "0.22914458207245006"],
+]
 
 for i, (input_, expected_output) in enumerate(test_cases):
     print(f"Running test case {i} with input '{input_}'...")
 
-    try:
-        output = run(input_)
+    # try:
+    output = run(input_)
+    print(output)
+    # except Exception as exc:
+    #     print(f"Runtime Error. {exc}")
 
-    except Exception as exc:
-        print(f"Runtime Error. {exc}")
+    # else:
+    #     if message := check(output, expected_output):
+    #         print(f"Wrong Answer. Have: '{output}'. Want: '{expected_output}'.")
 
-    else:
-        if message := check(output, expected_output):
-            print(f"Wrong Answer. Have: '{output}'. Want: '{expected_output}'.")
-
-        else:
-            print("Correct!")
+    #     else:
+    #         print("Correct!")
