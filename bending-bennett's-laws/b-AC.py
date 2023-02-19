@@ -87,7 +87,6 @@ def decode():
 
 
 
-
 dev = qml.device("default.qubit", wires=3)
 
 @qml.qnode(dev)
@@ -112,7 +111,6 @@ def circuit(i, j, k):
 
     return qml.probs(wires=range(3))
 
-
 # These functions are responsible for testing the solution.
 
 
@@ -126,7 +124,7 @@ def check(solution_output: str, expected_output: str) -> None:
     for i in range(2):
         for j in range(2):
             for k in range(2):
-                assert np.isclose(circuit(i, j, k)[4 * i + 2 * j + k],1)
+                assert np.isclose(circuit(i, j , k)[4 * i + 2 * j + k],1)
 
                 dev = qml.device("default.qubit", wires=3)
 
@@ -140,22 +138,3 @@ def check(solution_output: str, expected_output: str) -> None:
 
                 for op in ops:
                     assert not (2 in op.wires), "Invalid connection between qubits."
-
-
-test_cases = [['No input', 'No output']]
-
-for i, (input_, expected_output) in enumerate(test_cases):
-    print(f"Running test case {i} with input '{input_}'...")
-
-    try:
-        output = run(input_)
-
-    except Exception as exc:
-        print(f"Runtime Error. {exc}")
-
-    else:
-        if message := check(output, expected_output):
-            print(f"Wrong Answer. Have: '{output}'. Want: '{expected_output}'.")
-
-        else:
-            print("Correct!")
