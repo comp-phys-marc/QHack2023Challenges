@@ -49,7 +49,6 @@ def noisy_Pauli_density(word, lmbda):
         pauli_word = np.kron(lookup[word[i]], pauli_word)
 
     dm = (np.eye(2**len(word)) + pauli_word) / (2**(len(word)))
-    # dm = (1 - lmbda) * dm + 0.5 * lmbda * np.eye(2 ** len(word))
 
     qml.QubitDensityMatrix(dm, range(len(word)))
 
