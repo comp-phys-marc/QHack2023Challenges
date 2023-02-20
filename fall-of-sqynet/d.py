@@ -51,7 +51,7 @@ def heisenberg_trotter(couplings, p, time, depth):
 
     # trotterization
     ising_param = (2 * time) / depth
-    
+
     for i in range(depth):
         # TODO: trotterize H
 
@@ -104,7 +104,7 @@ def check(solution_output: str, expected_output: str) -> None:
         for i in range(3):
 
             couplings = [-params[-1]] + couplings
-            ops = [qml.PauliX(i)] + ops        
+            ops = [qml.PauliX(i)] + ops
 
         for i in range(4):
 
