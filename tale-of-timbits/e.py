@@ -42,8 +42,9 @@ def calculate_timbit(U, rho_0, rho, n_iters):
     for i in range(n_iters):
         matrix = get_matrix_timbit(U, rho_0, timbit)
         timbit = get_partial_trace(matrix, 0)
+        rho_0 = get_partial_trace(matrix, 1)
 
-    return timbit
+    return timbit, rho_0
 
 
 def apply_timbit_gate(U, rho_0, timbit):
@@ -87,8 +88,11 @@ def SAT(U_f, q, rho, n_bits):
 
     rho_0 = np.array([[1, 0], [0, 0]], dtype=np.complex64)
 
-    timbit = calculate_timbit(U_NP, rho_0, rho, 10)
-    timbit_gate = apply_timbit_gate(U_NP, rho_0, timbit)
+    timbit_gates = []
+    for i in range(q):
+        timbit, rho_0 = calculate_timbit(U_NP, rho_0, rho, 1)
+        timbit_gate = apply_timbit_gate(U_NP, rho_0, timbit)
+        timbit_gates.append(timbit_gate)
 
     @qml.qnode(device)
     def get_measurement():
@@ -98,15 +102,13 @@ def SAT(U_f, q, rho, n_bits):
         qml.QubitUnitary(U_f, wires=list(range(n_bits)))
 
         for i in range(q):
-            qml.QubitUnitary(timbit_gate, wires=n_bits)
+            qml.QubitUnitary(timbit_gates[i], wires=n_bits)
 
         return qml.probs(wires=[n_bits])
 
-    print(qml.draw(get_measurement)())
-    # Put your code here #
-    measurements = get_measurement().data
+    # print(qml.draw(get_measurement)())
 
-    return [measurements[0], measurements[1]]
+    return get_measurement().data
 
 
 # These functions are responsible for testing the solution.
