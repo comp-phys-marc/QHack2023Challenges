@@ -49,10 +49,9 @@ def noisy_Pauli_density(word, lmbda):
         pauli_word = np.kron(lookup[word[i]], pauli_word)
 
     dm = (np.eye(2**len(word)) + pauli_word) / (2**(len(word)))
+    # dm = (1 - lmbda) * dm + 0.5 * lmbda * np.eye(2 ** len(word))
 
     qml.QubitDensityMatrix(dm, range(len(word)))
-
-    # return (1-lmbda)*dm + 0.5*lmbda*np.eye(2**len(word))
 
     # can't get a matrix with depolarizing errors
     for j in range(len(word)):
@@ -74,7 +73,15 @@ def maxmix_trace_dist(word, lmbda):
     """
 
     sigma = np.eye(2**len(word)) * (1 / (2 ** len(word)))
-    rho = qml.matrix(noisy_Pauli_density)(word, lmbda)
+
+    dev = qml.device("default.mixed", wires=len(word))
+
+    @qml.qnode(dev)
+    def circuit():
+        noisy_Pauli_density(word, lmbda)
+        return qml.density_matrix(range(len(word)))
+
+    rho = circuit()
 
     return (1 / 2) * np.trace(abs_dist(rho, sigma))
 
@@ -118,8 +125,8 @@ test_cases = [['["XXI", 0.7]', '0.0877777777777777'], ['["XXIZ", 0.1]', '0.40351
 for i, (input_, expected_output) in enumerate(test_cases):
     print(f"Running test case {i} with input '{input_}'...")
 
-    # try:
-    output = run(input_)
+    try:
+        output = run(input_)
 
     except Exception as exc:
         print(f"Runtime Error. {exc}")
