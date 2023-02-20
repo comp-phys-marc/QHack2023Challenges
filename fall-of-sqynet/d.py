@@ -50,10 +50,13 @@ def heisenberg_trotter(couplings, p, time, depth):
     H = qml.Hamiltonian(coeffs, observables)
 
     # trotterization
-    ising_param = (2 * time) / depth
+    qml.ApproxTimeEvolution(H, time, depth)
 
-    for i in range(depth):
-        # TODO: trotterize H
+    # depolarization
+    qml.DepolarizingChannel(p, 1)
+    qml.DepolarizingChannel(p, 2)
+    qml.DepolarizingChannel(p, 3)
+    qml.DepolarizingChannel(p, 0)
 
     return qml.state()
 
