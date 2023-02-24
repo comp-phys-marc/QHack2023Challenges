@@ -20,7 +20,23 @@ def calculate_timbit(U, rho_0, rho, n_iters):
         (numpy.tensor): The fixed point density matrices.
     """
 
+<<<<<<< HEAD
     # Put your code here #
+=======
+    def get_matrix_timbit(U, rho_0, rho):
+        U_dagger = np.transpose(np.conjugate(U))
+        density_tensor = np.kron(rho_0, rho)
+        return np.matmul(U_dagger, np.matmul(density_tensor, U))
+
+    timbit = rho
+    print(timbit)
+    for i in range(n_iters):
+        matrix = get_matrix_timbit(U, rho_0, timbit)
+        timbit = get_partial_trace(matrix, 0)
+        rho_0 = get_partial_trace(matrix, 1)
+
+    return timbit, rho_0
+>>>>>>> b55d01473c46838f137a1f547a131040550353be
 
 
 def apply_timbit_gate(U, rho_0, timbit):
@@ -53,7 +69,33 @@ def SAT(U_f, q, rho, n_bits):
         numpy.tensor: The measurement probabilities on the last wire.
     """
 
+<<<<<<< HEAD
     # Put your code here #
+=======
+    rho_0 = np.array([[1, 0], [0, 0]], dtype=np.complex64)
+
+    timbit_gates = []
+    for i in range(q):
+        timbit, rho_0 = calculate_timbit(U_NP, rho_0, rho, 1)
+        timbit_gate = apply_timbit_gate(U_NP, rho_0, timbit)
+        timbit_gates.append(timbit_gate)
+
+    @qml.qnode(device)
+    def get_measurement():
+        for i in range(n_bits):
+            qml.Hadamard(wires=i)
+
+        qml.QubitUnitary(U_f, wires=list(range(n_bits)))
+
+        for i in range(q):
+            qml.QubitUnitary(timbit_gates[i], wires=n_bits)
+
+        return qml.probs(wires=[n_bits])
+
+    # print(qml.draw(get_measurement)())
+
+    return get_measurement().data
+>>>>>>> b55d01473c46838f137a1f547a131040550353be
 
 
 # These functions are responsible for testing the solution.
