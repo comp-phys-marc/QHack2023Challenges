@@ -6,6 +6,18 @@ import scipy
 U_NP = [[1, 0, 0, 0], [0, 0, 0, 1], [0, 1, 0, 0], [0, 0, 1, 0]]
 
 
+def get_partial_trace(matrix, subsystem):
+    device = qml.device("default.qubit", wires=2)
+
+    # get the partial trace
+    @qml.qnode(device)
+    def get_timbit_density(matrix):
+        qml.QubitUnitary(matrix, wires=[0, 1])
+        return qml.density_matrix(wires=[subsystem])
+
+    return get_timbit_density(matrix)
+
+
 def calculate_timbit(U, rho_0, rho, n_iters):
     """
     This function will return a timbit associated to the operator U and a state passed as an attribute.
@@ -20,7 +32,17 @@ def calculate_timbit(U, rho_0, rho, n_iters):
         (numpy.tensor): The fixed point density matrices.
     """
 
-    # Put your code here #
+    def get_matrix_timbit(U, rho_0, rho):
+        U_dagger = np.transpose(np.conjugate(U))
+        density_tensor = np.kron(rho_0, rho)
+        return np.matmul(U, np.matmul(density_tensor, U_dagger))
+
+    timbit = rho
+    for i in range(n_iters):
+        matrix = get_matrix_timbit(U, rho_0, timbit)
+        timbit = get_partial_trace(matrix, 0)
+
+    return timbit
 
 
 def apply_timbit_gate(U, rho_0, timbit):
@@ -37,6 +59,14 @@ def apply_timbit_gate(U, rho_0, timbit):
         (numpy.tensor): The output density matrices.
     """
 
+    def get_matrix_timbit(U, rho_0, rho):
+        U_dagger = np.transpose(np.conjugate(U))
+        density_tensor = np.kron(rho_0, rho)
+        return np.matmul(U, np.matmul(density_tensor, U_dagger))
+
+    matrix = get_matrix_timbit(U, rho_0, timbit)
+
+    return get_partial_trace(matrix, 1)
     # Put your code here #
 
 
@@ -52,8 +82,30 @@ def SAT(U_f, q, rho, n_bits):
     Returns:
         numpy.tensor: The measurement probabilities on the last wire.
     """
+    device = qml.device("default.qubit", wires=n_bits + 1)
 
+    rho_0 = np.array([[1, 0], [0, 0]], dtype=np.complex64)
+
+    timbit = calculate_timbit(U_NP, rho_0, rho, 10)
+    timbit_gate = apply_timbit_gate(U_NP, rho_0, timbit)
+
+    @qml.qnode(device)
+    def get_measurement():
+        for i in range(n_bits):
+            qml.Hadamard(wires=i)
+
+        qml.QubitUnitary(U_f, wires=list(range(n_bits + 1)))
+
+        for i in range(q):
+            qml.QubitUnitary(timbit_gate, wires=n_bits)
+
+        return qml.probs(wires=[n_bits])
+
+    print(qml.draw(get_measurement)())
     # Put your code here #
+    measurements = get_measurement().data
+
+    return [measurements[0], measurements[1]]
 
 
 # These functions are responsible for testing the solution.
@@ -94,6 +146,8 @@ for i, (input_, expected_output) in enumerate(test_cases):
         print(f"Runtime Error. {exc}")
 
     else:
+        print("My output : ", output)
+        print("Correct : ", expected_output)
         if message := check(output, expected_output):
             print(f"Wrong Answer. Have: '{output}'. Want: '{expected_output}'.")
 
