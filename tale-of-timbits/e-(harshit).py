@@ -7,15 +7,7 @@ U_NP = [[1, 0, 0, 0], [0, 0, 0, 1], [0, 1, 0, 0], [0, 0, 1, 0]]
 
 
 def get_partial_trace(matrix, subsystem):
-    device = qml.device("default.qubit", wires=2)
-
-    # get the partial trace
-    @qml.qnode(device)
-    def get_timbit_density(matrix):
-        qml.QubitUnitary(matrix, wires=[0, 1])
-        return qml.density_matrix(wires=[subsystem])
-
-    return get_timbit_density(matrix)
+    return qml.math.reduced_dm(matrix, [subsystem])
 
 
 def calculate_timbit(U, rho_0, rho, n_iters):
@@ -38,7 +30,7 @@ def calculate_timbit(U, rho_0, rho, n_iters):
         return np.matmul(U, np.matmul(density_tensor, U_dagger))
 
     timbit = rho
-    for i in range(n_iters):
+    for _ in range(n_iters):
         matrix = get_matrix_timbit(U, rho_0, timbit)
         timbit = get_partial_trace(matrix, 0)
 
@@ -65,7 +57,6 @@ def apply_timbit_gate(U, rho_0, timbit):
         return np.matmul(U, np.matmul(density_tensor, U_dagger))
 
     matrix = get_matrix_timbit(U, rho_0, timbit)
-
     return get_partial_trace(matrix, 1)
     # Put your code here #
 
@@ -82,28 +73,35 @@ def SAT(U_f, q, rho, n_bits):
     Returns:
         numpy.tensor: The measurement probabilities on the last wire.
     """
-    device = qml.device("default.qubit", wires=n_bits + 1)
+    device1 = qml.device("default.qubit", wires=n_bits)
 
-    rho_0 = np.array([[1, 0], [0, 0]], dtype=np.complex64)
-
-    timbit = calculate_timbit(U_NP, rho_0, rho, 10)
-    timbit_gate = apply_timbit_gate(U_NP, rho_0, timbit)
-
-    @qml.qnode(device)
-    def get_measurement():
-        for i in range(n_bits):
+    @qml.qnode(device1)
+    def get_init_state():
+        for i in range(n_bits - 1):
             qml.Hadamard(wires=i)
+        qml.QubitUnitary(U_f, wires=list(range(n_bits)))
+        return qml.density_matrix(wires=[n_bits - 1])
 
-        qml.QubitUnitary(U_f, wires=list(range(n_bits + 1)))
+    device2 = qml.device("default.mixed", wires=1)
 
-        for i in range(q):
-            qml.QubitUnitary(timbit_gate, wires=n_bits)
+    @qml.qnode(device2)
+    def get_measurement(init_state):
+        qml.QubitDensityMatrix(init_state, wires=0)
+        for _ in range(q):
+            # calculate the timbit for the current state
+            timbit = calculate_timbit(U_NP, init_state, rho, 100)
+            timbit_gate = apply_timbit_gate(U_NP, init_state, timbit)
+            qml.QubitUnitary(timbit_gate, wires=0)
 
-        return qml.probs(wires=[n_bits])
+            # get the new initial state
+            init_state = np.matmul(timbit_gate, init_state)
 
-    print(qml.draw(get_measurement)())
+        return qml.probs(wires=[0])
+
+    timbit_init_state = get_init_state()
+
     # Put your code here #
-    measurements = get_measurement().data
+    measurements = get_measurement(timbit_init_state).data
 
     return [measurements[0], measurements[1]]
 
