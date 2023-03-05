@@ -11,4 +11,4 @@ Our solutions to the [QHack2023](https://qhack.ai/) quantum computing challenges
 
 **Rank** : $\mathbf{56 / 793}$
 
-<img src="qhack-2023-rank.png" height="35%" width="50%">
+<img src="qhack-2023-rank.png" height="50%" width="85%">
