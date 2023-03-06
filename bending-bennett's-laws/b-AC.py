@@ -1,6 +1,7 @@
 import pennylane as qml
 import pennylane.numpy as np
 
+
 def encode(i, j, k):
     """
     Quantum encoding function. It must act only on the first two qubits.
@@ -13,64 +14,52 @@ def encode(i, j, k):
 
     # Put your code here #
     # U1
-    U1 = np.array([
-        [1, 0, 0, 0],
-        [0, 1, 0, 0],
-        [0, 0, 1, 0],
-        [0, 0, 0, 1]
-    ])
+    U1 = np.array([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]])
     # U2
-    U2 = np.array([
-        [1, 0, 0, 0],
-        [0, 1, 0, 0],
-        [0, 0, -1, 0],
-        [0, 0, 0, -1],
-    ])
+    U2 = np.array(
+        [
+            [1, 0, 0, 0],
+            [0, 1, 0, 0],
+            [0, 0, -1, 0],
+            [0, 0, 0, -1],
+        ]
+    )
     # U3
-    U3 = np.array([
-        [0, 0, 1, 0],
-        [0, 1, 0, 1],
-        [1, 0, 0, 0],
-        [0, 1, 0, 0]
-    ])
+    U3 = np.array([[0, 0, 1, 0], [0, 1, 0, 1], [1, 0, 0, 0], [0, 1, 0, 0]])
     # U4
-    U4 = np.array([
-        [0, 0, 1, 0],
-        [0, 1, 0, 1],
-        [-1, 0, 0, 0],
-        [0, -1, 0, 0],
-    ])
+    U4 = np.array(
+        [
+            [0, 0, 1, 0],
+            [0, 1, 0, 1],
+            [-1, 0, 0, 0],
+            [0, -1, 0, 0],
+        ]
+    )
     # U5
-    U5 = np.array([
-        [0, 1, 0, 0],
-        [1, 0, 0, 0],
-        [0, 0, 0, 1],
-        [0, 0, 1, 0]
-    ])
+    U5 = np.array([[0, 1, 0, 0], [1, 0, 0, 0], [0, 0, 0, 1], [0, 0, 1, 0]])
     # U6
-    U6 = np.array([
-        [0, -1, 0, 0],
-        [1, 0, 0, 0],
-        [0, 0, 0, -1],
-        [0, 0, 1, 0],
-    ])
+    U6 = np.array(
+        [
+            [0, -1, 0, 0],
+            [1, 0, 0, 0],
+            [0, 0, 0, -1],
+            [0, 0, 1, 0],
+        ]
+    )
     # U7
-    U7 = np.array([
-        [0, 0, 0, 1],
-        [0, 0, 1, 0],
-        [0, 1, 0, 0],
-        [1, 0, 0, 0]
-    ])
+    U7 = np.array([[0, 0, 0, 1], [0, 0, 1, 0], [0, 1, 0, 0], [1, 0, 0, 0]])
     # U8
-    U8 = np.array([
-        [0, 0, 0, 1],
-        [0, 0, 1, 0],
-        [0, -1, 0, 0],
-        [-1, 0, 0, 0],
-    ])
+    U8 = np.array(
+        [
+            [0, 0, 0, 1],
+            [0, 0, 1, 0],
+            [0, -1, 0, 0],
+            [-1, 0, 0, 0],
+        ]
+    )
 
     U = [U1, U7, U5, U3, U2, U8, U6, U4]
-    qml.QubitUnitary(U[int(str(i)+str(j)+str(k), 2)], wires=[0, 1])
+    qml.QubitUnitary(U[int(str(i) + str(j) + str(k), 2)], wires=[0, 1])
 
 
 def decode():
@@ -86,8 +75,8 @@ def decode():
     qml.Hadamard(0)
 
 
-
 dev = qml.device("default.qubit", wires=3)
+
 
 @qml.qnode(dev)
 def circuit(i, j, k):
@@ -111,20 +100,19 @@ def circuit(i, j, k):
 
     return qml.probs(wires=range(3))
 
+
 # These functions are responsible for testing the solution.
 
 
-
 def run(test_case_input: str) -> str:
-
     return None
 
-def check(solution_output: str, expected_output: str) -> None:
 
+def check(solution_output: str, expected_output: str) -> None:
     for i in range(2):
         for j in range(2):
             for k in range(2):
-                assert np.isclose(circuit(i, j , k)[4 * i + 2 * j + k],1)
+                assert np.isclose(circuit(i, j, k)[4 * i + 2 * j + k], 1)
 
                 dev = qml.device("default.qubit", wires=3)
 
