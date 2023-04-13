@@ -10,6 +10,7 @@ Our solutions to the [QHack2023](https://qhack.ai/) quantum computing challenges
 4. [Sairaaj Surve](https://github.com/SairaajSurve)
 
 **Rank** : $\mathbf{56 / 793}$
+
 **Highest Rank** : $\mathbf{31}$
 
 <img src="qhack-2023-rank.png" height="50%" width="85%">
